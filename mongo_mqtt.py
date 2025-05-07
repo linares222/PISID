@@ -4,7 +4,7 @@ import paho.mqtt.publish as publish
 from pymongo import MongoClient
 import json
 
-# ⚙️ Configurações
+# Configurações
 broker = "broker.emqx.io"
 intervalo_segundos = 1
 limite_som_alerta = 21.5
@@ -40,7 +40,7 @@ def atualizar_registos(ultimo_som_id, ultimo_mov_id):
 
 def start_mongo_mqtt():
     global ultimo_id_som, ultimo_id_mov
-    print("🚀 Ligado ao Mongo e pronto para reenviar via MQTT...")
+    print("Ligado ao Mongo e pronto para reenviar via MQTT...")
 
     while True:
         time.sleep(intervalo_segundos)
@@ -65,7 +65,7 @@ def start_mongo_mqtt():
                 hostname=broker,
                 qos=2
             )
-            print(f"📤 Enviado SOM (Player {player}): {sound}")
+            print(f"Enviado SOM (Player {player}): {sound}")
 
             # Alertas de som
             if sound > limite_som_alerta and (player, sound) not in ultimo_alerta_critico:
@@ -79,7 +79,7 @@ def start_mongo_mqtt():
                     hostname=broker,
                     qos=2
                 )
-                print(f"🔔 ALERTA_SOM_CRITICO (Player {player}): {sound}")
+                print(f"ALERTA_SOM_CRITICO (Player {player}): {sound}")
                 ultimo_alerta_critico.add((player, sound))
 
             last_val, last_time = ultimo_som.get(player, (None, None))
@@ -96,7 +96,7 @@ def start_mongo_mqtt():
                             hostname=broker,
                             qos=2
                         )
-                        print(f"🔔 ALERTA_SOM_ESTAGNADO (Player {player}): {sound}")
+                        print(f"ALERTA_SOM_ESTAGNADO (Player {player}): {sound}")
                         ultimo_alerta_estagnado[player] = agora
             else:
                 ultimo_som[player] = (sound, agora)
@@ -130,7 +130,7 @@ def start_mongo_mqtt():
                 hostname=broker,
                 qos=2
             )
-            print(f"📤 Enviado MOVIMENTO (Player {player}, Marsami {marsami})")
+            print(f"Enviado MOVIMENTO (Player {player}, Marsami {marsami})")
 
             if room_origin == 0:
                 publish.single(
@@ -144,14 +144,14 @@ def start_mongo_mqtt():
                     hostname=broker,
                     qos=2
                 )
-                print(f"🎯 Alerta NOVO_MARSAMI enviado para grupo {player} - Marsami {marsami}")
+                print(f"Alerta NOVO_MARSAMI enviado para grupo {player} - Marsami {marsami}")
 
             ultimo_movimento[player] = agora
             inatividade_alertada.discard(player)
             ultimo_id_mov = doc["_id"]
             atualizar_registos(ultimo_id_som, ultimo_id_mov)
 
-        # 🔔 Inatividade
+        # Inatividade
         for player, last_time in ultimo_movimento.items():
             if (datetime.now() - last_time).total_seconds() > tempo_inatividade:
                 if player not in inatividade_alertada:
@@ -164,7 +164,7 @@ def start_mongo_mqtt():
                         hostname=broker,
                         qos=2
                     )
-                    print(f"🔔 ALERTA_INATIVIDADE (Player {player})")
+                    print(f"ALERTA_INATIVIDADE (Player {player})")
                     inatividade_alertada.add(player)
 
 if __name__ == "__main__":

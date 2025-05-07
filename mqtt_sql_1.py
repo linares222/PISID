@@ -3,7 +3,7 @@ import paho.mqtt.client as mqtt
 import json
 from datetime import datetime
 
-# ⚙️ Conexão MySQL
+# Conexão MySQL
 conn = mysql.connector.connect(
     host="localhost",
     user="root",
@@ -12,7 +12,7 @@ conn = mysql.connector.connect(
 )
 cursor = conn.cursor()
 
-# ✅ Ligações válidas permitidas diretamente em código
+# Ligações válidas permitidas diretamente em código
 ligacoes_validas = {
     (1, 2), (1, 3),
     (2, 4),
@@ -25,37 +25,37 @@ ligacoes_validas = {
     (10, 1)
 }
 
-# 📩 Callback MQTT
+# Callback MQTT
 def on_message(client, userdata, msg):
     try:
         payload = json.loads(msg.payload.decode())
     except:
-        print("❌ JSON inválido")
+        print("JSON inválido")
         return
 
-    print(f"📥 Recebido em {msg.topic}: {payload}")
+    print(f"Recebido em {msg.topic}: {payload}")
 
     if "filtered" in msg.topic:
         id_grupo = payload.get("Player")
 
-        # 📋 Obter o IDUtilizador associado ao grupo
+        # Obter o IDUtilizador associado ao grupo
         cursor.execute("SELECT IDUtilizador FROM utilizador WHERE IDGrupo = %s", (id_grupo,))
         res_utilizador = cursor.fetchone()
 
         if not res_utilizador:
-            print(f"⚠️ Ignorado: Grupo {id_grupo} não registado.")
+            print(f"Ignorado: Grupo {id_grupo} não registado.")
             return
 
         id_utilizador = res_utilizador[0]
 
-        # 📋 Verificar se existe jogo ativo
+        # Verificar se existe jogo ativo
         cursor.execute("SELECT IDJogo FROM jogo WHERE IDUtilizador = %s AND Estado = 'Ativo' ORDER BY DataHoraInicio DESC LIMIT 1", (id_utilizador,))
         jogo_ativo = cursor.fetchone()
 
         if jogo_ativo:
             id_jogo_ativo = jogo_ativo[0]
         else:
-            print(f"⚠️ Nenhum jogo ativo para o grupo {id_grupo}")
+            print(f"Nenhum jogo ativo para o grupo {id_grupo}")
             return
 
         try:
@@ -68,7 +68,7 @@ def on_message(client, userdata, msg):
                     id_jogo_ativo
                 ))
                 conn.commit()
-                print("✅ Inserido em medicoessom")
+                print("✅Inserido em medicoessom")
 
             elif "movimento" in msg.topic:
                 sala_origem = payload.get("RoomOrigin", 0)
@@ -79,12 +79,12 @@ def on_message(client, userdata, msg):
                 # If RoomOrigin is 0, it's a new Marsami spawn, not a standard passage.
                 # This is handled by NOVO_MARSAMI alert from mongo_mqtt.py.
                 if sala_origem == 0:
-                    print(f"ℹ️ Movimento de {marsami_nome} com SalaOrigem 0 ignorado para inserção em medicoespassagens (tratado como NOVO_MARSAMI).")
+                    print(f"Movimento de {marsami_nome} com SalaOrigem 0 ignorado para inserção em medicoespassagens (tratado como NOVO_MARSAMI).")
                     # We might still want to run procedures related to Marsami appearance if not covered by NOVO_MARSAMI handler
                     # For now, skipping the rest of this block for sala_origem == 0
                     return
 
-                # ❗ Verificar se a ligação SalaOrigem → SalaDestino é válida
+                # Verificar se a ligação SalaOrigem → SalaDestino é válida
                 if (sala_origem, sala_destino) not in ligacoes_validas:
                     alerta_payload = json.dumps({
                         "type": "ALERTA_MOVIMENTO_INVALIDO",
@@ -95,7 +95,7 @@ def on_message(client, userdata, msg):
                         "hora": hora
                     })
                     client.publish(f"pisid/alertas/{id_grupo}", alerta_payload, qos=1)
-                    print(f"⚠️ ALERTA_MOVIMENTO_INVALIDO enviado para {id_grupo} ({sala_origem}→{sala_destino})")
+                    print(f"ALERTA_MOVIMENTO_INVALIDO enviado para {id_grupo} ({sala_origem}→{sala_destino})")
                     return
 
                 # NOTE: Assuming IDMedicao is AUTO_INCREMENT in the medicoespassagens table.
@@ -108,11 +108,11 @@ def on_message(client, userdata, msg):
                     id_jogo_ativo
                 ))
                 conn.commit()
-                print("✅ Inserido em medicoespassagens")
+                print("Inserido em medicoespassagens")
 
                 is_even = marsami_nome % 2 == 0
                 cursor.callproc("AtualizarOuInserirMarsami", [marsami_nome, is_even, hora, id_jogo_ativo])
-                print(f"🤖 Marsami {'Even' if is_even else 'Odd'} atualizado/inserido")
+                print(f"Marsami {'Even' if is_even else 'Odd'} atualizado/inserido")
 
                 cursor.callproc("RemoverMarsamiSalaOrigem", [id_jogo_ativo, sala_origem, marsami_nome])
                 conn.commit()
@@ -125,7 +125,7 @@ def on_message(client, userdata, msg):
                 print("🏁 Ocupação labirinto atualizada")
 
         except Exception as e:
-            print("❌ Erro ao inserir no MySQL:", e)
+            print("Erro ao inserir no MySQL:", e)
 
     elif "alertas" in msg.topic:
         tipo_alerta = payload.get("type")
@@ -135,21 +135,21 @@ def on_message(client, userdata, msg):
             marsami_id = payload.get("marsamiID")
 
             if player is None or marsami_id is None:
-                print("⚠️ Dados incompletos no NOVO_MARSAMI, ignorado.")
+                print("Dados incompletos no NOVO_MARSAMI, ignorado.")
                 return
 
             cursor.callproc('VerificarCriarNovoJogo', (player, marsami_id))
             conn.commit()
-            print(f"🎯 Verificação/criação de novo jogo realizada para Grupo {player}, Marsami {marsami_id}")
+            print(f"Verificação/criação de novo jogo realizada para Grupo {player}, Marsami {marsami_id}")
 
             cursor.execute("SELECT jogo.IDJogo FROM jogo JOIN utilizador ON jogo.IDUtilizador = utilizador.IDUtilizador WHERE utilizador.IDGrupo = %s AND jogo.Estado = 'Ativo' ORDER BY jogo.DataHoraInicio DESC LIMIT 1", (player,))
             novo_jogo = cursor.fetchone()
 
             if novo_jogo:
                 id_jogo_ativo = novo_jogo[0]
-                print(f"✅ Jogo ativo atualizado para {id_jogo_ativo}")
+                print(f"Jogo ativo atualizado para {id_jogo_ativo}")
             else:
-                print("⚠️ Erro ao atualizar jogo ativo após criação")
+                print("Erro ao atualizar jogo ativo após criação")
         else: # Handle other alert types
             id_grupo_from_payload = payload.get("Player")
             final_id_grupo = None
@@ -196,7 +196,7 @@ def on_message(client, userdata, msg):
                 id_jogo_ativo
             ))
             conn.commit()
-            print("🚨 Alerta inserido com sucesso!")
+            print("Alerta inserido com sucesso!")
 
 def start_mqtt():
     # Use the newer callback API version to address DeprecationWarning
@@ -206,7 +206,7 @@ def start_mqtt():
     client.subscribe("pisid/filtered/+/som", qos=2)
     client.subscribe("pisid/filtered/+/movimento", qos=2)
     client.subscribe("pisid/alertas/+", qos=2)
-    print("🔄 A escutar MQTT e enviar para MySQL com validações de salas...")
+    print("A escutar MQTT e enviar para MySQL com validações de salas...")
     client.loop_forever()
 
 if __name__ == "__main__":
