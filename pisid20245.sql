@@ -290,10 +290,6 @@ DELIMITER ;
 -- Estrutura da tabela `jogo`
 --
 
--- Modificar Enum para incluir 'Pausado'
-ALTER TABLE `jogo` 
-MODIFY COLUMN `Estado` enum('Ativo','Pausado','Desativo_som','Desativo_energia','Desativo_jogador','Desativo_admin') DEFAULT NULL;
-
 CREATE TABLE `jogo` (
   `IDJogo` int(11) NOT NULL,
   `Descricao` text DEFAULT NULL,
@@ -633,6 +629,10 @@ INSERT INTO `utilizador` (`IDUtilizador`, `Nome`, `Telemovel`, `Tipo`, `Email`, 
 ALTER TABLE `jogo`
   ADD PRIMARY KEY (`IDJogo`),
   ADD KEY `IDUtilizador` (`IDUtilizador`);
+
+-- Modificar Enum para incluir 'Pausado'
+ALTER TABLE `jogo` 
+MODIFY COLUMN `Estado` enum('Ativo','Pausado','Desativo_som','Desativo_energia','Desativo_jogador','Desativo_admin') DEFAULT NULL;
 
 --
 -- Índices para tabela `marsami`
