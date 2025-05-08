@@ -92,7 +92,7 @@ def on_message(client, userdata, msg):
 
         # 🚫 Anti-flood para som
         chave_tempo = (data["Player"], "som")
-        if agora - ultima_msg_tempo.get(chave_tempo, 0) < 0.2:
+        if agora - ultima_msg_tempo.get(chave_tempo, 0) < 0.1:
             print("🚫 Mensagem de som muito rápida ignorada.")
             return
         ultima_msg_tempo[chave_tempo] = agora
@@ -127,7 +127,7 @@ def on_message(client, userdata, msg):
 
         # 🚫 Anti-flood para movimento
         chave_tempo = (data["Player"], "mov")
-        if agora - ultima_msg_tempo.get(chave_tempo, 0) < 0.2:
+        if agora - ultima_msg_tempo.get(chave_tempo, 0) < 0.1:
             print("🚫 Mensagem de movimento muito rápida ignorada.")
             return
         ultima_msg_tempo[chave_tempo] = agora
