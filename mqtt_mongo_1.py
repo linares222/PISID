@@ -59,8 +59,8 @@ ultima_msg_tempo = {}  # {(player, tipo): timestamp}
 def on_connect(client, userdata, flags, rc):
     print("✅ Ligado ao MQTT com código:", rc)
     for i in range(100):
-        client.subscribe(f"pisid_mazemov_{i}", qos=2)
-        client.subscribe(f"pisid_mazesound_{i}", qos=2)
+        client.subscribe(f"pisid_mazemov_{i}", qos=1)
+        client.subscribe(f"pisid_mazesound_{i}", qos=1)
 
 def on_message(client, userdata, msg):
     decoded = msg.payload.decode("utf-8")
@@ -92,7 +92,7 @@ def on_message(client, userdata, msg):
 
         # 🚫 Anti-flood para som
         chave_tempo = (data["Player"], "som")
-        if agora - ultima_msg_tempo.get(chave_tempo, 0) < 0.1:
+        if agora - ultima_msg_tempo.get(chave_tempo, 0) < 0.2:
             print("🚫 Mensagem de som muito rápida ignorada.")
             return
         ultima_msg_tempo[chave_tempo] = agora
@@ -127,7 +127,7 @@ def on_message(client, userdata, msg):
 
         # 🚫 Anti-flood para movimento
         chave_tempo = (data["Player"], "mov")
-        if agora - ultima_msg_tempo.get(chave_tempo, 0) < 0.1:
+        if agora - ultima_msg_tempo.get(chave_tempo, 0) < 0.2:
             print("🚫 Mensagem de movimento muito rápida ignorada.")
             return
         ultima_msg_tempo[chave_tempo] = agora
