@@ -63,7 +63,7 @@ def start_mongo_mqtt():
                     "Sound": sound
                 }),
                 hostname=broker,
-                qos=2
+                qos=1
             )
             print(f"📤 Enviado SOM (Player {player}): {sound}")
 
@@ -77,7 +77,7 @@ def start_mongo_mqtt():
                         "hora": hora
                     }),
                     hostname=broker,
-                    qos=2
+                    qos=1
                 )
                 print(f"🔔 ALERTA_SOM_CRITICO (Player {player}): {sound}")
                 ultimo_alerta_critico.add((player, sound))
@@ -94,7 +94,7 @@ def start_mongo_mqtt():
                                 "hora": hora
                             }),
                             hostname=broker,
-                            qos=2
+                            qos=1
                         )
                         print(f"🔔 ALERTA_SOM_ESTAGNADO (Player {player}): {sound}")
                         ultimo_alerta_estagnado[player] = agora
@@ -128,7 +128,7 @@ def start_mongo_mqtt():
                     "Hour": hora
                 }),
                 hostname=broker,
-                qos=2
+                qos=1
             )
             print(f"📤 Enviado MOVIMENTO (Player {player}, Marsami {marsami})")
 
@@ -149,7 +149,7 @@ def start_mongo_mqtt():
                             "hora": datetime.now().isoformat()
                         }),
                         hostname=broker,
-                        qos=2
+                        qos=1
                     )
                     print(f"🔔 ALERTA_INATIVIDADE (Player {player})")
                     inatividade_alertada.add(player)
