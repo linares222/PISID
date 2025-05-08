@@ -6,7 +6,7 @@ import json
 
 # ⚙️ Configurações
 broker = "broker.emqx.io"
-intervalo_segundos = 1
+intervalo_segundos = 0.5
 limite_som_alerta = 21
 tempo_estagnado = 5  # segundos
 tempo_inatividade = 10  # segundos
