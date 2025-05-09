@@ -188,10 +188,10 @@ def start_mqtt():
     client = mqtt.Client()
     client.on_message = on_message
     client.connect("broker.emqx.io", 1883)
-    client.subscribe("pisid/filtered/+/som", qos=2)
-    client.subscribe("pisid/filtered/+/movimento", qos=2)
-    client.subscribe("pisid/alertas/+", qos=2)
-    print("🔄 A escutar MQTT e enviar para MySQL com QoS 2...")
+    client.subscribe("pisid/filtered/+/som", qos=1)
+    client.subscribe("pisid/filtered/+/movimento", qos=1)
+    client.subscribe("pisid/alertas/+", qos=1)
+    print("🔄 A escutar MQTT e enviar para MySQL com QoS 1...")
     client.loop_forever()
 
 if __name__ == "__main__":
