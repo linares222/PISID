@@ -51,9 +51,13 @@ mycol_sound = db["MedicoesSom"]
 mycol_erros = db["Erros"]
 
 # 📊 Estado para prevenção de spam
-ultimo_som = {}  # {player: valor}
-ultimo_mov = {}  # {(player, marsami): (orig, dest, status)}
-ultima_msg_tempo = {}  # {(player, tipo): timestamp}
+ultimo_som = {}
+ultimo_mov = {}
+ultima_msg_tempo = {}
+
+# 🎯 Limites de som aceitáveis
+LIMITE_SOM_MIN = 0
+LIMITE_SOM_MAX = 25
 
 # 🔗 MQTT callbacks
 def on_connect(client, userdata, flags, rc):
@@ -77,22 +81,20 @@ def on_message(client, userdata, msg):
         if not all(k in data for k in ["Sound", "Hour", "Player"]):
             regista_erro(data, "Som", "Campos em falta")
             return
-        if not is_valid_number(data["Sound"]):
-            regista_erro(data, "Som", "Sound inválido")
+        if not is_valid_number(data["Sound"]) or not (LIMITE_SOM_MIN <= data["Sound"] <= LIMITE_SOM_MAX):
+            regista_erro(data, "Som", f"Valor anômalo → {data['Sound']} db")
             return
         if not is_valid_datetime(data["Hour"]):
             regista_erro(data, "Som", "Hora inválida")
             return
 
-        # 🚫 Som repetido (spam)
         if ultimo_som.get(data["Player"]) == data["Sound"]:
             print("🔁 Som repetido ignorado.")
             return
         ultimo_som[data["Player"]] = data["Sound"]
 
-        # 🚫 Anti-flood para som
         chave_tempo = (data["Player"], "som")
-        if agora - ultima_msg_tempo.get(chave_tempo, 0) < 0.1:
+        if agora - ultima_msg_tempo.get(chave_tempo, 0) < 0.01:
             print("🚫 Mensagem de som muito rápida ignorada.")
             return
         ultima_msg_tempo[chave_tempo] = agora
@@ -117,7 +119,6 @@ def on_message(client, userdata, msg):
             regista_erro(data, "Movimento", "Campo numérico inválido")
             return
 
-        # 🚫 Movimento repetido (spam)
         chave_mov = (data["Player"], data["Marsami"])
         valores_mov = (data["RoomOrigin"], data["RoomDestiny"], data["Status"])
         if ultimo_mov.get(chave_mov) == valores_mov:
@@ -125,9 +126,8 @@ def on_message(client, userdata, msg):
             return
         ultimo_mov[chave_mov] = valores_mov
 
-        # 🚫 Anti-flood para movimento
         chave_tempo = (data["Player"], "mov")
-        if agora - ultima_msg_tempo.get(chave_tempo, 0) < 0.1:
+        if agora - ultima_msg_tempo.get(chave_tempo, 0) < 0.01:
             print("🚫 Mensagem de movimento muito rápida ignorada.")
             return
         ultima_msg_tempo[chave_tempo] = agora
@@ -151,5 +151,8 @@ if __name__ == "__main__":
     client.on_connect = on_connect
     client.on_message = on_message
     client.connect("broker.emqx.io", 1883)
+    #client.connect("localhost", 1883)
+    #client.connect("test.mosquitto.org", 1883)
     print("🔄 A escutar mensagens MQTT...")
     client.loop_forever()
+
